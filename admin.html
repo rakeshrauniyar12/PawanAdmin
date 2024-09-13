@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page - Upload Notes</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Admin Panel</h1>
+        </header>
+
+        <section class="upload-section">
+            <h2>Upload Notes and Assignments</h2>
+
+            <!-- Upload Form -->
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="file">Upload File</label>
+                    <input type="file" id="file" name="file" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn">Upload</button>
+                </div>
+            </form>
+
+            <p id="statusMessage"></p>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@8.0.0"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
+<style>
+
+    /* Basic reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 50px auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+    text-align: center;
+    background-color: #333;
+    padding: 10px;
+    border-radius: 8px 8px 0 0;
+    color: white;
+}
+
+.upload-section {
+    margin-top: 20px;
+}
+
+.upload-section h2 {
+    color: darkorange;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+input[type="text"],
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+input[type="file"] {
+    display: block;
+    margin-top: 10px;
+}
+
+.btn {
+    background-color: darkorange;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: #e67e22;
+}
+
+#statusMessage {
+    margin-top: 15px;
+    color: #555;
+    text-align: center;
+}
+
+
+</style>
+
+<script>
+
+    // Initialize the Appwrite client
+const appwrite = new Appwrite.Client();
+
+appwrite
+    .setEndpoint('https://[APPWRITE_ENDPOINT]') // Replace with your Appwrite API endpoint
+    .setProject('[PROJECT_ID]'); // Replace with your Project ID
+
+const database = new Appwrite.Databases(appwrite);
+const storage = new Appwrite.Storage(appwrite);
+
+const uploadForm = document.getElementById('uploadForm');
+const statusMessage = document.getElementById('statusMessage');
+
+uploadForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const title = document.getElementById('title').value;
+    const description = document.getElementById('description').value;
+    const fileInput = document.getElementById('file').files[0];
+
+    try {
+        // Upload the file to Appwrite Storage
+        const fileResponse = await storage.createFile('[YOUR_BUCKET_ID]', fileInput);
+
+        // Save the file details and description to the database
+        const documentResponse = await database.createDocument(
+            '[YOUR_DATABASE_ID]',
+            '[YOUR_COLLECTION_ID]',
+            {
+                title: title,
+                description: description,
+                fileId: fileResponse.$id,
+            }
+        );
+
+        statusMessage.textContent = 'Upload successful!';
+    } catch (error) {
+        statusMessage.textContent = 'Upload failed. ' + error.message;
+    }
+});
+
+</script>
